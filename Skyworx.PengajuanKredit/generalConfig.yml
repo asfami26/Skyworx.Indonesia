@@ -6,3 +6,10 @@ generalConfig:
 
   ConnectionStrings:
     Postgres: Host=103.160.62.183;Port=5432;Database=pengajuan_kredit_db;Username=asfi;Password=Asf121264#;
+    SqlServer: Data Source=localhost; Initial Catalog=pengajuan_kredit_db; uid=sa; pwd=Asf121264#; Pooling=true; TrustServerCertificate=True;
+    
+rabbitmq:
+  host: "rabbitmq://103.160.62.183"
+  username: "guest"
+  password: "guest"
+ 

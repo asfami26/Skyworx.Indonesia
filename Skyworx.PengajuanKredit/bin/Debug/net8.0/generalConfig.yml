@@ -1,8 +1,0 @@
-generalConfig:
-  Jwt:
-    SecretKey: thisisaverysecurekey_forjwt_256bits
-    Issuer: SkyworxIssuer
-    Audience: SkyworxAudience
-
-  ConnectionStrings:
-    Postgres: Host=103.160.62.183;Port=5432;Database=pengajuan_kredit_db;Username=asfi;Password=Asf121264#;

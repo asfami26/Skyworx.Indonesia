@@ -1,6 +1,7 @@
 
 
 using System.Text;
+using Asf.Messaging.Extensions;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -47,12 +48,15 @@ public class Startup
         services.AddSingleton(AppConfig);
         services.AddDbContext<DataContext>(options =>
             options.UseNpgsql(AppConfig.ConnectionStrings.Postgres));
+        services.AddDbContext<LocalContext>(options =>
+            options.UseSqlServer(AppConfig.ConnectionStrings.SqlServer));
         
         services.AddAutoMapper(typeof(KreditService).Assembly);
         services.AddScoped<IKreditService, KreditService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddTransient<IValidator<CreatePengajuanKreditCommand>, KreditRequestValidator<CreatePengajuanKreditCommand>>();
         services.AddTransient<IValidator<CalculateAngsuranCommand>, KreditRequestValidator<CalculateAngsuranCommand>>();
+        services.AddMessagingPublisher(Configuration);
         
         var key = Encoding.ASCII.GetBytes(AppConfig.Jwt.SecretKey);
         services.AddAuthentication(options =>
@@ -97,7 +101,7 @@ public class Startup
                     {
                         Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
                     },
-                    new string[] {}
+                    []
                 }
             });
         });

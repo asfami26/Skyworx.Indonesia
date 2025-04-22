@@ -17,6 +17,8 @@ namespace Skyworx.Common.Config
     public class ConnectionStringsConfig
     {
         public string Postgres { get; set; }
+        
+        public string SqlServer { get; set; }
     }
 }
 

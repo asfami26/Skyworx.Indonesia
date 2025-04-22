@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../buildMultiTargeting/Skyworx.PengajuanKredit.props" />
-</Project>

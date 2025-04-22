@@ -46,6 +46,12 @@ public class KreditController(IKreditService kreditService) : ControllerBase
     {
         return await kreditService.HitungAngsuranAsync(command);
     }
+    
+    [HttpPost("save-msg")]
+    public async Task<ApiResponse> SaveMsg([FromBody] CreatePengajuanKreditCommand command)
+    {
+        return await kreditService.SaveMsg(command);
+    }
 
 
 

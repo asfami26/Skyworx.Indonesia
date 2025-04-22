@@ -12,5 +12,6 @@ public interface IKreditService
     Task<ApiResponse> UpdateAsync(Guid id, CreatePengajuanKreditCommand command);
     Task<ApiResponse> DeleteAsync(Guid id);
     Task<ApiDataResponse<AngsuranDto>> HitungAngsuranAsync(CalculateAngsuranCommand command);
+    Task<ApiResponse> SaveMsg(CreatePengajuanKreditCommand command);
 
 }

@@ -1,4 +1,6 @@
+using Asf.Messaging.MessageBroker;
 using AutoMapper;
+using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,7 +14,7 @@ using Skyworx.Service.Interface;
 
 namespace Skyworx.Service.Impl;
 
-public class KreditService(DataContext context, IMapper mapper) : IKreditService
+public class KreditService(DataContext context, LocalContext local, IMapper mapper,IBus bus) : IKreditService
 {
     public async Task<ApiResponse> CreateAsync(CreatePengajuanKreditCommand command)
     {
@@ -21,12 +23,24 @@ public class KreditService(DataContext context, IMapper mapper) : IKreditService
             throw new BadRequestException(ResponseConstant.InvalidInput);
 
         var entity = mapper.Map<PengajuanKredit>(command);  
-        entity.CreatedAt = DateTime.UtcNow.Date;
+        entity.CreatedAt = DateTime.Now;
         entity.UpdatedAt = DateTime.MaxValue;
         entity.Angsuran = HitungAngsuran(command.Plafon, command.Bunga, command.Tenor);
         
-        context.PengajuanKredits.Add(entity);
-        await context.SaveChangesAsync();
+        local.PengajuanKredits.Add(entity);
+        await local.SaveChangesAsync();
+        
+        entity.CreatedAt = DateTime.UtcNow;
+        
+        await bus.Publish(new KreditPengajuanCreatedEvent
+        {
+            Id = entity.Id,
+            Plafon = entity.Plafon,
+            Bunga = entity.Bunga,
+            Tenor = entity.Tenor,
+            Angsuran = entity.Angsuran,
+            CreatedAt = entity.CreatedAt
+        });
         response.Message = ResponseConstant.SubmitSuccess;
         return response; 
     }
@@ -39,7 +53,6 @@ public class KreditService(DataContext context, IMapper mapper) : IKreditService
         
         response.Message = data.Count > 0 ? ResponseConstant.GetDataSuccess : ResponseConstant.MesNotFound; 
         response.Data = data;
-        
         return response;
     }
     
@@ -75,15 +88,27 @@ public class KreditService(DataContext context, IMapper mapper) : IKreditService
         var response = new ApiResponse();
         var data = await context.PengajuanKredits.FindAsync(id)
                    ?? throw new NotFoundException(ResponseConstant.MesNotFound);
-
-
+        
         context.PengajuanKredits.Remove(data);
         await context.SaveChangesAsync();
         
         response.Message = ResponseConstant.DeleteSuccess;
         return response;
     }
-    
+
+    public async Task<ApiResponse> SaveMsg(CreatePengajuanKreditCommand command)
+    {
+        var entity = mapper.Map<PengajuanKredit>(command);
+        entity.Id = Guid.NewGuid();
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.MaxValue;
+        entity.Angsuran = HitungAngsuran(command.Plafon, command.Bunga, command.Tenor);
+
+        
+        
+        return new ApiResponse { Message = ResponseConstant.SubmitSuccess };
+    }
+
     public Task<ApiDataResponse<AngsuranDto>> HitungAngsuranAsync(CalculateAngsuranCommand command)
     {
         if (command.Plafon <= 0 || command.Bunga <= 0 || command.Bunga > 100 || command.Tenor <= 0)
@@ -99,8 +124,7 @@ public class KreditService(DataContext context, IMapper mapper) : IKreditService
             Data = [new() { Angsuran = angsuran }]
         });
     }
-
-
+    
     protected virtual decimal HitungAngsuran(decimal plafon, decimal bunga, int tenor)
     {
         var bungaBulanan = bunga / 12 / 100;
